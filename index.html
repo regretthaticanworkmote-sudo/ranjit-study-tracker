@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#142e50">
+<meta name="description" content="Ranjit Study Tracker: track chapters, study time and daily progress.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Ranjit Study Tracker</title>
+<style>
+*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#172033;background:#f2f5fa;margin:0;padding:16px;max-width:900px;margin:auto}
+header{background:#142e50;color:white;padding:24px 20px;border-radius:17px;margin-bottom:15px}
+h1{font-size:27px;letter-spacing:1.5px;margin:0 0 8px}header p{margin:0;opacity:.9;line-height:1.4}
+.card,.subject{background:white;border-radius:14px;padding:15px;margin:12px 0;box-shadow:0 2px 10px #142e5010}
+.total{font-size:29px;font-weight:800;color:#17365d}.bar{height:11px;background:#e6ebf2;border-radius:30px;overflow:hidden;margin-top:8px}
+.fill{height:100%;width:0;background:#25845c;transition:width .2s}.subject-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.subject h2{font-size:18px;margin:0}.pct{font-weight:700;color:#176344;white-space:nowrap}
+.items{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:8px;margin-top:12px}
+.item{display:flex;align-items:center;gap:8px;padding:9px;background:#f5f7fb;border-radius:9px;min-height:42px}
+.item input{width:20px;height:20px;accent-color:#21845b;flex-shrink:0}.item span{flex:1;overflow-wrap:anywhere}
+button{border:0;border-radius:9px;padding:9px 12px;background:#17365d;color:white;font-weight:700;font-size:13px;cursor:pointer}
+button.secondary{background:#e8eef7;color:#17365d}button.danger{background:#fff0f0;color:#a32626}
+.tools{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.actions{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+.note{font-size:12px;color:#596579;line-height:1.5}.empty{color:#697386;font-size:13px;padding:8px}
+@media print{.actions,.tools,.note{display:none}body{background:white}.card,.subject{box-shadow:none;border:1px solid #ddd}}
+
+.timer-panel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#f2f6fb;padding:10px;border-radius:10px;margin:12px 0}
+.timer-panel span{font-size:13px;color:#596579}.timer-panel strong{font-size:18px;color:#17365d;min-width:64px}
+.day-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #e8edf4}
+.datebar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:15px}
+.datebar input{padding:9px;border-radius:8px;border:1px solid #bdc9d8;font:inherit;background:white}
+.history-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.history-box{background:#f5f7fb;border-radius:10px;padding:12px}
+</style></head><body>
+<header><h1>RANJIT STUDY TRACKER</h1><p>PERSONAL STUDY GOAL TRACKER · Track chapters, study time and daily progress.</p>
+<div class="datebar"><label for="studyDate">SELECT DATE</label><input id="studyDate" type="date"></div></header>
+<section class="card"><h2 id="dateHeading">TODAY'S REPORT</h2>
+<div class="history-grid">
+ <div class="history-box"><b>Selected date study time</b><div class="total" id="dailyTime">0s</div><div id="dailyDone">0 topics marked complete on this date</div></div>
+ <div class="history-box"><b>Previous day study time</b><div class="total" id="yesterdayTime">0s</div><div id="yesterdayDone">0 topics marked complete</div></div>
+</div><h3>Subject-wise time for selected date</h3><div id="dailyBreakdown">No study time recorded for this date yet.</div>
+<p class="note">Choose a date to review that day's study time and completion activity. Timers can be started only for today's date.</p>
+</section>
+<section class="card"><div><b>OVERALL COMPLETION</b></div><div class="total" id="overall">0%</div>
+<div class="bar"><div class="fill" id="overallBar"></div></div><p id="count">0 of 0 topics completed</p></section>
+<div class="actions">
+<button onclick="addSubject()">＋ Add Subject</button>
+<button class="secondary" onclick="window.print()">Print Tracker</button>
+<button class="danger" onclick="resetTicks()">Reset This Date</button>
+</div>
+<div id="list"></div>
+<p class="note">EDIT MODE: Use “Add topic” to add chapters/poems, “Rename” to change a subject name, and “Remove” to delete a topic or subject. Each date has its own checklist and study-time record. Data is saved in this browser on this device.</p>
+<script>
+const DEFAULTS = [{"id": "history", "name": "History", "topics": ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4", "Chapter 5"]}, {"id": "geography", "name": "Geography", "topics": ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4", "Chapter 6"]}, {"id": "civics", "name": "Civics", "topics": ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4", "Chapter 5"]}, {"id": "economics", "name": "Economics", "topics": ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4"]}, {"id": "physics", "name": "Physics", "topics": ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4"]}, {"id": "chemistry", "name": "Chemistry", "topics": ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4"]}, {"id": "biology", "name": "Biology", "topics": ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4", "Chapter 5"]}, {"id": "sanskrit", "name": "Sanskrit", "topics": ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4", "Chapter 5", "Chapter 6", "Chapter 7", "Chapter 8", "Chapter 9", "Chapter 10"]}, {"id": "first-flight", "name": "First Flight", "topics": ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4", "Chapter 5"]}, {"id": "footprints", "name": "Footprints Without Feet", "topics": ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4", "Chapter 5"]}, {"id": "poems", "name": "English Poems", "topics": ["Poem 1", "Poem 2", "Poem 3", "Poem 4", "Poem 5", "Poem 6", "Poem 7", "Poem 8", "Poem 9"]}, {"id": "maths-statistics", "name": "Maths", "topics": ["Statistics"]}];
+const DATA_KEY="michaelPhilipsTracker_subjects_v1";
+const TICK_KEY="michaelPhilipsTracker_ticks_v1";
+const DAY_KEY="michaelPhilipsTracker_dayData_v1";
+const TIMER_KEY="ranjitStudyTracker_activeTimer_v2";
+let subjects=[],ticks={},dayData={},activeTimer=null,timerHandle=null;
+const todayISO=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
+const shiftDate=(iso,n)=>{const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
+const selectedDate=()=>document.getElementById("studyDate").value||todayISO();
+const dayBucket=(date)=>{if(!dayData[date])dayData[date]={seconds:{},completed:{}};return dayData[date];};
+try{subjects=JSON.parse(localStorage.getItem(DATA_KEY)||"null")||DEFAULTS.map(x=>({...x,topics:[...x.topics]}));}catch(e){subjects=DEFAULTS.map(x=>({...x,topics:[...x.topics]}));}
+try{ticks=JSON.parse(localStorage.getItem(TICK_KEY)||"{}");}catch(e){ticks={};}
+try{dayData=JSON.parse(localStorage.getItem(DAY_KEY)||"{}");}catch(e){dayData={};}
+function saveData(){localStorage.setItem(DATA_KEY,JSON.stringify(subjects));}
+function saveTicks(){localStorage.setItem(TICK_KEY,JSON.stringify(ticks));}
+function saveDays(){localStorage.setItem(DAY_KEY,JSON.stringify(dayData));}
+function saveActiveTimer(){if(activeTimer)localStorage.setItem(TIMER_KEY,JSON.stringify(activeTimer));else localStorage.removeItem(TIMER_KEY);}
+function selectedTicks(){return dayBucket(selectedDate()).completed;}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function fmt(sec){sec=Math.max(0,Math.floor(sec||0));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return (h?h+"h ":"")+(m?m+"m ":"")+s+"s";}
+function addElapsed(){if(!activeTimer)return;const now=Date.now();const delta=Math.max(0,Math.floor((now-activeTimer.last)/1000));if(delta){const bucket=dayBucket(activeTimer.date);bucket.seconds[activeTimer.subjectId]=(bucket.seconds[activeTimer.subjectId]||0)+delta;activeTimer.last+=delta*1000;saveDays();saveActiveTimer();}}
+function stopTimer(silent=false){if(!activeTimer)return;addElapsed();activeTimer=null;saveActiveTimer();if(timerHandle){clearInterval(timerHandle);timerHandle=null;}renderTimers();renderDailySummary();if(!silent)updateTimerButtons();}
+function startTimer(subjectId){
+ if(selectedDate()!==todayISO()){alert("Timer can be started only for today's date. Select today's date first.");return;}
+ if(activeTimer&&activeTimer.subjectId===subjectId){stopTimer();return;}
+ if(activeTimer)stopTimer(true);
+ activeTimer={subjectId,date:todayISO(),last:Date.now()};saveActiveTimer();
+ timerHandle=setInterval(()=>{addElapsed();renderTimers();renderDailySummary();},1000);
+ renderTimers();renderDailySummary();updateTimerButtons();
+}
+function subjectSeconds(sub,date){return (dayData[date]?.seconds?.[sub.id]||0)+(activeTimer&&activeTimer.subjectId===sub.id&&activeTimer.date===date?Math.max(0,Math.floor((Date.now()-activeTimer.last)/1000)):0);}
+function renderTimers(){
+ subjects.forEach(sub=>{
+  const el=document.getElementById("time-"+sub.id);if(el)el.textContent=fmt(subjectSeconds(sub,selectedDate()));
+  const btn=document.getElementById("timer-"+sub.id);if(btn){const running=!!activeTimer&&activeTimer.subjectId===sub.id;btn.textContent=running?"■ Stop timer":"▶ Start timer";btn.setAttribute("aria-pressed",running?"true":"false");}
+ });
+}
+function updateTimerButtons(){renderTimers();}
+function renderDailySummary(){
+ const date=selectedDate(),bucket=dayBucket(date);
+ let total=0;subjects.forEach(s=>total+=subjectSeconds(s,date));
+ const done=Object.keys(bucket.completed||{}).filter(k=>bucket.completed[k]).length;
+ const totalEl=document.getElementById("dailyTime");if(totalEl)totalEl.textContent=fmt(total);
+ const doneEl=document.getElementById("dailyDone");if(doneEl)doneEl.textContent=done+" topics marked complete on this date";
+ const rows=document.getElementById("dailyBreakdown");if(rows){rows.innerHTML="";subjects.forEach(s=>{const sec=subjectSeconds(s,date);if(sec>0){const row=document.createElement("div");row.className="day-row";row.innerHTML="<span>"+esc(s.name)+"</span><b>"+fmt(sec)+"</b>";rows.append(row);}});if(!rows.children.length)rows.textContent="No study time recorded for this date yet.";}
+ const yesterday=shiftDate(date,-1),yb=dayData[yesterday]||{seconds:{},completed:{}};
+ let ysec=0;subjects.forEach(s=>ysec+=(yb.seconds?.[s.id]||0));
+ const ydone=Object.keys(yb.completed||{}).filter(k=>yb.completed[k]).length;
+ document.getElementById("yesterdayTime").textContent=fmt(ysec);
+ document.getElementById("yesterdayDone").textContent=ydone+" topics marked complete";
+ document.getElementById("dateHeading").textContent=date===todayISO()?"TODAY'S REPORT":date+" REPORT";
+}
+function render(){
+ const list=document.getElementById("list");list.innerHTML="";
+ subjects.forEach((sub,si)=>{
+  const card=document.createElement("section");card.className="subject";
+  const head=document.createElement("div");head.className="subject-head";
+  const title=document.createElement("h2");title.textContent=sub.name;
+  const pct=document.createElement("div");pct.className="pct";pct.id="pct"+si;
+  head.append(title,pct);
+  const timerPanel=document.createElement("div");timerPanel.className="timer-panel";
+  const time=document.createElement("strong");time.id="time-"+sub.id;time.textContent="0s";
+  const timerBtn=document.createElement("button");timerBtn.id="timer-"+sub.id;timerBtn.textContent="▶ Start timer";timerBtn.addEventListener("click",()=>startTimer(sub.id));
+  const timerLabel=document.createElement("span");timerLabel.textContent="Study time:";
+  timerPanel.append(timerLabel,time,timerBtn);
+  const bar=document.createElement("div");bar.className="bar";
+  const fill=document.createElement("div");fill.className="fill";fill.id="bar"+si;bar.append(fill);
+  const items=document.createElement("div");items.className="items";
+  sub.topics.forEach((topic,ti)=>{
+   const id=sub.id+"::"+ti;
+   const label=document.createElement("label");label.className="item";
+   const cb=document.createElement("input");cb.type="checkbox";cb.checked=!!selectedTicks()[id];
+   cb.addEventListener("change",()=>{const daily=selectedTicks();if(cb.checked)daily[id]=true;else delete daily[id];saveDays();update();renderDailySummary();});
+   const span=document.createElement("span");span.textContent=topic;
+   const remove=document.createElement("button");remove.className="danger";remove.textContent="×";remove.title="Remove this topic";remove.addEventListener("click",()=>removeTopic(si,ti));
+   label.append(cb,span,remove);items.append(label);
+  });
+  if(sub.topics.length===0){const msg=document.createElement("div");msg.className="empty";msg.textContent="No topics yet. Add one below.";items.append(msg);}
+  const tools=document.createElement("div");tools.className="tools";
+  const add=document.createElement("button");add.textContent="＋ Add topic";add.addEventListener("click",()=>addTopic(si));
+  const rename=document.createElement("button");rename.className="secondary";rename.textContent="Rename";rename.addEventListener("click",()=>renameSubject(si));
+  const removeSub=document.createElement("button");removeSub.className="danger";removeSub.textContent="Remove subject";removeSub.addEventListener("click",()=>removeSubject(si));
+  tools.append(add,rename,removeSub);card.append(head,timerPanel,bar,items,tools);list.append(card);
+ });
+ update();renderTimers();renderDailySummary();
+}
+function update(){
+ let allDone=0,allTotal=0;
+ subjects.forEach((sub,si)=>{
+  let done=0;const daily=selectedTicks();sub.topics.forEach((_,ti)=>{if(daily[sub.id+"::"+ti])done++;});
+  const total=sub.topics.length,p=total?Math.round(done/total*100):0;
+  document.getElementById("pct"+si).textContent=done+"/"+total+" · "+p+"%";
+  document.getElementById("bar"+si).style.width=p+"%";allDone+=done;allTotal+=total;
+ });
+ const p=allTotal?Math.round(allDone/allTotal*100):0;
+ document.getElementById("overall").textContent=p+"%";document.getElementById("overallBar").style.width=p+"%";
+ document.getElementById("count").textContent=allDone+" of "+allTotal+" topics completed";
+}
+function addSubject(){const name=prompt("Enter the new subject name:");if(!name||!name.trim())return;const id="custom-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);subjects.push({id,name:name.trim(),topics:[]});saveData();render();}
+function addTopic(si){const topic=prompt("Enter chapter/topic name:");if(!topic||!topic.trim())return;subjects[si].topics.push(topic.trim());saveData();render();}
+function renameSubject(si){const name=prompt("Enter the new subject name:",subjects[si].name);if(!name||!name.trim())return;subjects[si].name=name.trim();saveData();render();}
+function removeTopic(si,ti){if(!confirm('Remove "'+subjects[si].topics[ti]+'"?'))return;const sub=subjects[si];sub.topics.splice(ti,1);const prefix=sub.id+"::";const oldTicks={...ticks};Object.keys(ticks).forEach(k=>{if(k.startsWith(prefix))delete ticks[k];});for(let oldI=0,newI=0;oldI<=sub.topics.length;oldI++){if(oldI===ti)continue;if(oldTicks[prefix+oldI])ticks[prefix+newI]=true;newI++;}saveTicks();saveData();render();}
+function removeSubject(si){if(!confirm('Remove subject "'+subjects[si].name+'" and all its topics?'))return;const id=subjects[si].id;if(activeTimer?.subjectId===id)stopTimer(true);subjects.splice(si,1);Object.keys(ticks).forEach(k=>{if(k.startsWith(id+"::"))delete ticks[k];});Object.keys(dayData).forEach(d=>{delete dayData[d].seconds?.[id];});saveTicks();saveDays();saveData();render();}
+function resetTicks(){if(!confirm("Clear completed ticks for this selected date only? Other dates will remain unchanged."))return;dayBucket(selectedDate()).completed={};saveDays();render();}
+document.getElementById("studyDate").value=todayISO();
+document.getElementById("studyDate").addEventListener("change",()=>{if(activeTimer&&selectedDate()!==activeTimer.date){stopTimer(true);}render();});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&activeTimer){addElapsed();}});
+window.addEventListener("beforeunload",()=>{if(activeTimer){addElapsed();}});
+// Restore a running timer after a reload or reopening the installed app.
+try{const saved=JSON.parse(localStorage.getItem(TIMER_KEY)||"null");if(saved&&saved.date===todayISO()&&subjects.some(s=>s.id===saved.subjectId)){activeTimer=saved;addElapsed();timerHandle=setInterval(()=>{addElapsed();renderTimers();renderDailySummary();},1000);}else if(saved){localStorage.removeItem(TIMER_KEY);}}catch(e){localStorage.removeItem(TIMER_KEY);}
+// Migrate old all-time checkmarks into today's record once, without overwriting date history.
+if(Object.keys(ticks).length){const todayBucket=dayBucket(todayISO());Object.keys(ticks).forEach(k=>{if(ticks[k])todayBucket.completed[k]=true;});ticks={};saveTicks();saveDays();}
+render();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+}
+</script></body></html>
