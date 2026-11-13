@@ -1,0 +1,8 @@
+UPLOAD THESE FILES TO YOUR GITHUB REPOSITORY ROOT (same level as README.md):
+index.html (replaces old countdown homepage with Study Tracker)
+countdown.html (new separate countdown page)
+manifest.webmanifest, icon-192.png, icon-512.png, service-worker.js (tracker files)
+
+Tracker: https://regretthaticanworkmote-sudo.github.io/ranjit-study-tracker/
+Countdown: https://regretthaticanworkmote-sudo.github.io/ranjit-study-tracker/countdown.html
+Do not upload this ZIP itself. Extract it first.

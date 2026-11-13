@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="hi"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827"><title>17 February Countdown</title>
+
+<style>
+:root{color-scheme:dark;--text:#f4f7ff;--muted:#a8b4c8;--accent:#66a6ff;--red:#ff4d5e;--green:#37c98a}
+*{box-sizing:border-box}body{margin:0;padding:18px 13px 32px;background:linear-gradient(160deg,#101b30,#080d17 65%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:760px;margin:auto}header{text-align:center;padding:15px 8px 20px}.eyebrow{color:#9db8df;font-size:13px;letter-spacing:2px;font-weight:800}h1{font-size:clamp(27px,7vw,40px);margin:8px 0 5px}.subtitle{color:var(--muted);margin:0}
+.count-card{background:linear-gradient(135deg,#1c3152,#14243c);border:1px solid #365071;border-radius:24px;padding:22px 16px;text-align:center;margin:8px 0 22px}.count-number{font-size:clamp(58px,16vw,84px);font-weight:850;line-height:1;color:#fff;letter-spacing:-3px}.count-label{font-size:16px;color:#c6d8f3;margin-top:8px}.target{margin-top:14px;font-weight:700;color:#a9caff}.progress-wrap{height:9px;background:#0b1424;border-radius:99px;overflow:hidden;margin:18px 4px 0}.progress{height:100%;width:0;background:linear-gradient(90deg,#4c91ff,#55d5ae);border-radius:99px}.summary{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:13px;margin-top:9px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;color:var(--muted);font-size:13px;margin:0 0 18px}.dot{display:inline-flex;align-items:center;gap:6px}.sample{width:17px;height:17px;border:1.5px solid #70819d;border-radius:50%;display:inline-block;position:relative}.sample.today{border:2px solid var(--accent);box-shadow:0 0 0 3px #66a6ff25}.sample.past{border-color:var(--red)}.sample.past:after{content:"×";position:absolute;inset:-4px 0 0;text-align:center;color:var(--red);font-size:20px;font-weight:900}
+.month{background:#101a2b;border:1px solid #29364d;border-radius:18px;padding:16px 12px;margin:13px 0}.month h2{font-size:18px;margin:0 0 14px 3px}.weekdays,.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;text-align:center}.weekdays{color:#8191aa;font-size:11px;font-weight:700;margin-bottom:8px}.day{aspect-ratio:1;border:1px solid #3a4962;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;font-size:13px;font-weight:650;min-width:0;background:#17243a}.day.empty{visibility:hidden}.day.today{border:2px solid var(--accent);background:#1b3a62;color:white;box-shadow:0 0 0 3px #66a6ff20}.day.past{border-color:#74313d;color:#ff9ba5;background:#291923}.day.past:after{content:"×";position:absolute;color:var(--red);font-size:30px;font-weight:900;line-height:1;text-shadow:0 1px 3px #000;pointer-events:none}.day.future{color:#d9e6fb}.day.target-day{background:#234936;border:2px solid var(--green);color:#caffdf}footer{text-align:center;color:#8796ad;font-size:12px;margin-top:20px;line-height:1.6}
+@media(min-width:560px){.month{padding:18px}.weekdays,.days{gap:10px}.day{font-size:15px}}
+</style></head><body><main>
+<header><div class="eyebrow">YOUR COUNTDOWN</div><h1>Mission: 17 February</h1><p class="subtitle">Har din ek kadam apne goal ki taraf.</p></header>
+<section class="count-card" aria-live="polite"><div class="count-number" id="remaining">—</div><div class="count-label" id="label">days remaining</div><div class="target" id="target">🎯 Target: 17 February</div><div class="progress-wrap"><div class="progress" id="progress"></div></div><div class="summary"><span id="elapsed">0 days passed</span><span id="percent">0% complete</span></div></section>
+<div class="legend"><span class="dot"><i class="sample today"></i> Today</span><span class="dot"><i class="sample"></i> Upcoming</span><span class="dot"><i class="sample past"></i> Day finished</span></div>
+<section id="calendar" aria-label="Countdown calendar"></section>
+<footer>Har din khatam hote hi us date par red cross apne-aap lag jayega. Calendar phone ki current date ke hisaab se update hota hai.</footer>
+</main><script>
+(function(){
+ const now=new Date(), today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+ let targetYear=today.getFullYear(); if(today.getMonth()>1 || (today.getMonth()===1 && today.getDate()>17)) targetYear++;
+ const start=new Date(today), end=new Date(targetYear,1,17), msDay=86400000;
+ const diff=(a,b)=>Math.round((Date.UTC(b.getFullYear(),b.getMonth(),b.getDate())-Date.UTC(a.getFullYear(),a.getMonth(),a.getDate()))/msDay);
+ const total=Math.max(0,diff(start,end)), remaining=total, elapsed=0;
+ document.getElementById('remaining').textContent=remaining;
+ document.getElementById('label').textContent=remaining===1?'day remaining':'days remaining';
+ document.getElementById('target').textContent='🎯 Target: 17 February '+targetYear;
+ document.getElementById('elapsed').textContent='Today is day 1';
+ document.getElementById('percent').textContent='0% complete';
+ document.getElementById('progress').style.width='0%';
+ const names=['January','February','March','April','May','June','July','August','September','October','November','December'];
+ const weeks=['S','M','T','W','T','F','S'], cal=document.getElementById('calendar');
+ let cur=new Date(start.getFullYear(),start.getMonth(),1);
+ while(cur<=end){
+  const y=cur.getFullYear(),m=cur.getMonth(),section=document.createElement('section');section.className='month';
+  const h=document.createElement('h2');h.textContent=names[m]+' '+y;section.appendChild(h);
+  const w=document.createElement('div');w.className='weekdays';weeks.forEach(x=>{const s=document.createElement('span');s.textContent=x;w.appendChild(s)});section.appendChild(w);
+  const grid=document.createElement('div');grid.className='days';for(let i=0;i<new Date(y,m,1).getDay();i++){const b=document.createElement('span');b.className='day empty';grid.appendChild(b)}
+  const last=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=last;d++){const dt=new Date(y,m,d);if(dt<start||dt>end)continue;const el=document.createElement('div');el.className='day';el.textContent=d;
+   if(dt<today)el.classList.add('past');else if(dt.getTime()===today.getTime())el.classList.add('today');else el.classList.add('future');
+   if(dt.getTime()===end.getTime())el.classList.add('target-day');
+   el.setAttribute('aria-label',dt.toDateString()+(dt<today?', day finished':dt.getTime()===today.getTime()?', today':', upcoming'));grid.appendChild(el)}
+  section.appendChild(grid);cal.appendChild(section);cur=new Date(y,m+1,1);
+ }
+ if(today.getTime()===end.getTime()){document.getElementById('remaining').textContent='0';document.getElementById('label').textContent='Target day is today!'}
+ if(today>end){document.getElementById('remaining').textContent='0';document.getElementById('label').textContent='Target day reached!'}
+ 
+})();
+</script></body></html>
